@@ -109,7 +109,7 @@
 			window.audio&&window.audio.pause();
 			let audio=new Audio();
 			window.audio = audio;
-			audio.load();
+			audio.preload = "auto";
 			audio.src = songsList[songId];
 			//创建上下文
 			let audioCtx = new (window.AudioContext || window.webkitAudioContext)();

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>music-visualization</title>
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		html{
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<!-- <audio src="music/Ibuki.mp3" controls="controls" id="source">
+		当前浏览器不支持audio
+	</audio> -->
+	<canvas id="canvas">
+		您的浏览器不支持canvas
+	</canvas>
+		
+
+	<script type="text/javascript">
+		alert("点击窗口任意位置播放");
+		//http://music.163.com/song/media/outer/url?id=30482386.mp3
+		let audio=new Audio('./music/菅野祐悟 - ブラフをかけろ.mp3');
+		audio.crossOrigin="anonymous";
+		//创建上下文
+		let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+		//从audio元素创建音频数据
+		let source=audioCtx.createMediaElementSource(audio);
+		//创建分析器
+		let analyser=audioCtx.createAnalyser();
+		//获取画布
+		let canvas = document.getElementById("canvas");
+		let canvasCtx = canvas.getContext("2d");
+		//创建保存数据的数组
+		let dataArray = new Uint8Array(analyser.fftSize);
+		
+		
+		// 定义画布宽高,全屏
+		canvas.width = document.documentElement.clientWidth;
+		canvas.height = document.documentElement.clientHeight;
+		//可视化效果线宽
+		canvasCtx.lineWidth=0.8;
+		
+		//将音频数据连接到分析器
+		source.connect(analyser);
+		//连接到播放设备
+		analyser.connect(audioCtx.destination);
+		//???????
+		analyser.fftSize=4096;
+		//频谱数据平滑度
+		analyser.smoothingTimeConstant=0.9;
+		
+
+		console.log(analyser.frequencyBinCount)
+		canvas.onclick=function(){
+			audio.play();
+		}
+		//在画布上绘制星型形状的函数
+		function star(ctx,x,y,r,count,dataArray) {
+			//获取频谱分析数据
+			analyser.getByteFrequencyData(dataArray);
+			let cas = ctx;
+			cas.save();
+			cas.translate(x,y);
+			cas.beginPath();
+			cas.moveTo(0,r+dataArray[0]);
+			for (var i = 0; i <count; i++) {
+				cas.lineTo(Math.sin((360/count)*i*(Math.PI / 180))*(r+dataArray[i]),Math.cos((360/count)*i*(Math.PI / 180))*(r+dataArray[i]));
+				cas.lineTo(Math.sin((360/count)*(i+0.5)*(Math.PI / 180))*r,Math.cos((360/count)*(i+0.5)*(Math.PI / 180))*r);
+			}
+			cas.closePath();
+			cas.restore();
+		}
+		(function loop(){
+			canvasCtx.clearRect(0,0,canvas.width,canvas.height);
+			star(canvasCtx,canvas.width/2,canvas.height/2,100,256,dataArray);
+			canvasCtx.stroke();
+			requestAnimationFrame(loop);
+		})()
+// 		source.connect(gainNode);
+// 		gainNode.connect(audioCtx.destination);
+	</script>
+</body>
+</html>

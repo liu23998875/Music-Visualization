@@ -20,13 +20,13 @@
 	<canvas id="canvas">
 		您的浏览器不支持canvas
 	</canvas>
-	<audio id="audio" src="http://music.163.com/song/media/outer/url?id=30482386.mp3" crossOrigin = "anonymous"></audio>
 		
 
 	<script type="text/javascript">
 		alert("这是一个简单的canvas音乐可视化效果Demo，audio具体api参考MDN，点击窗口任意位置播放");
 		//http://music.163.com/song/media/outer/url?id=30482386.mp3
-		let audio=document.getElementById("audio");
+		let audio=new Audio('./music/菅野祐悟 - ブラフをかけろ.mp3');
+		audio.crossOrigin="anonymous";
 		//创建上下文
 		let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 		//从audio元素创建音频数据
@@ -55,7 +55,7 @@
 		//频谱数据平滑度
 		analyser.smoothingTimeConstant=0.9;
 		
-
+			
 		console.log(analyser.frequencyBinCount)
 		canvas.onclick=function(){
 			audio.play();

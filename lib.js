@@ -3,8 +3,25 @@
     "document" in global ? global.MusicVisualization = factory() : console.log("致命错误");
 })(this, function () {
 	class MusicVisualization {
-	
-		constructor() {
+		/*
+		options
+		{
+			songsListWrap:歌曲列表元素id,
+			canvas:{//画布设定
+				width:宽度,//默认最大窗口宽度
+				height:高度,//默认最大窗口高度
+				linewidth:线宽,//默认1
+				color:颜色//,默认黑色
+			},
+			visual:{//可视效果设定
+				fftSize:声音样本的窗口大小//fftSize 属性的值必须是从32到32768范围内的2的非零幂; 其默认值为2048.
+				smoothing:数据平滑度//0-1 默认0.8
+				count:实际显示的数量//默认等于fftSize的一半，但不是必须为fftsize的一半
+				length:音频效果长度//为0-1之间的值，默认等于1，等于0就不动了
+			}
+		}
+		*/
+		constructor(options) {
 			this.audio = null;
 			this.audioCtx = null;
 			this.animate = null;
@@ -12,6 +29,7 @@
 			this.dataArray = null;
 			this.canvasCtx = null;
 			this.animate = null;
+			this.options = options;
 			this.songsList = [
 				"./music/black.mp3",
 				"./music/Ibuki.mp3",
@@ -52,25 +70,26 @@
 			//连接到播放设备
 			this.analyser.connect(this.audioCtx.destination);
 			//???????
-			this.analyser.fftSize = 4096;
+			this.analyser.fftSize = this.options.visual.fftSize||2048;
 			//频谱数据平滑度
-			this.analyser.smoothingTimeConstant = 0.9;
+			this.analyser.smoothingTimeConstant = this.options.visual.smoothing||0.8;
 		}
 		// 创建画布
 		createCanvasCtx() {
 			let canvas = createEle("canvas", "您的浏览器不支持canvas");
 	
-			canvas.width = document.documentElement.clientWidth;
-			canvas.height = document.documentElement.clientHeight;
+			canvas.width = this.options.canvas.width||document.documentElement.clientWidth;
+			canvas.height = this.options.canvas.height||document.documentElement.clientHeight;
+			this.canvasCtx = canvas.getContext("2d");
+			//设置画布
+			this.canvasCtx.lineWidth = this.options.canvas.linewidth||1;
+			this.canvasCtx.strokeStyle = this.options.canvas.color;
 			//在页面中插入元素
 			document.body.appendChild(canvas);
-			this.canvasCtx = canvas.getContext("2d");
 		}
 		//创建歌曲列表
 		createSongsList() {
-			let songsListWrap = createEle("div", "", {
-				id: "songsListWrap"
-			});
+			let songsListWrap = document.getElementById("songsListWrap");
 			songsListWrap.style.marginTop = "-" + this.canvasCtx.canvas.height / 2 + "px";
 			let songItem = null;
 			for (let i = 0; i < this.songsList.length; i++) {
@@ -85,8 +104,6 @@
 				//插入元素
 				songsListWrap.appendChild(songItem)
 			}
-			//将列表元素插入页面
-			document.body.appendChild(songsListWrap);
 		}
 		//创建存放分析数据的数组
 		createDataArray(length) {
@@ -105,6 +122,17 @@
 			this.audio.play();
 			//调用效果动画
 			this.loop();
+		}
+		//暂停
+		pause(){
+			
+			
+		}
+		// 继续播放
+		continuation(){
+			
+			
+			
 		}
 		//获取频谱分析数据
 		getAnalyserData() {
@@ -129,15 +157,20 @@
 			cas.closePath();
 			cas.restore();
 		}
+		animate(){
+			
+		}
 		loop() {
 			//获取数据
-			let data = window.app.getAnalyserData();
+			let _this = window.app
+			let data = _this.getAnalyserData();
+			let count = _this.options.visual.count||_this.analyser.fftSize/2;
 			// canvasCtx.strokeStyle = randomColor();
-			window.app.canvasCtx.clearRect(0, 0, window.app.canvasCtx.canvas.width, window.app.canvasCtx.canvas.height);
-			window.app.star(window.app.canvasCtx, window.app.canvasCtx.canvas.width / 2, window.app.canvasCtx.canvas.height / 2,
-				100, 512, data);
-			window.app.canvasCtx.stroke();
-			window.app.animate = requestAnimationFrame(window.app.loop);
+			_this.canvasCtx.clearRect(0, 0, _this.canvasCtx.canvas.width, _this.canvasCtx.canvas.height);
+			_this.star(_this.canvasCtx, _this.canvasCtx.canvas.width / 2, _this.canvasCtx.canvas.height / 2,
+				100, count, data);
+			_this.canvasCtx.stroke();
+			_this.animate = requestAnimationFrame(_this.loop);
 		}
 	}
 	return MusicVisualization

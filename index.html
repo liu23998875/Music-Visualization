@@ -42,9 +42,6 @@
 		</script>
 	</head>
 	<body>
-		<canvas id="canvas">
-			您的浏览器不支持canvas
-		</canvas>
 		<div id="songsListWrap">
 		</div>
 		<script src="lib.js" type="text/javascript">
@@ -52,7 +49,16 @@
 		</script>
 		<script type="text/javascript">
 			
-			let app = new MusicVisualization();
+			let app = new MusicVisualization({
+				songsListWrap:"songsListWrap",
+				canvas:{
+					color:"#ff0000"
+				},
+				visual:{
+					count:512,
+					smoothing:0.9
+				}
+			});
 		</script>
 	</body>
 </html>

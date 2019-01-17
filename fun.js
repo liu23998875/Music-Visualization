@@ -12,6 +12,18 @@ function createEle(tagName, content, attrib) {
 	return ele;
 }
 
+//事件监听 addEventListener()方法 ie678和欧朋老版本不支持此方法，可使用attachEvent()方法替代
+function eventListener(ele, type, fn, cap) {
+	var cap = cap || false;
+	if (ele.addEventListener) {
+		ele.addEventListener(type, fn, cap);
+	} else if (ele.attachEvent) {
+		ele.attachEvent('on' + type, fn);
+	} else {
+		ele['on' + type] = fn;
+	}
+}
+
 //阻止默认行为
 function preventDefault(e) {
 	e.preventDefault ? e.preventDefault() : e.returnValue = false;

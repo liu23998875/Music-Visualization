@@ -1,186 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>music-visualization</title>
-	<style type="text/css">
-		*{
-			margin: 0;
-			padding: 0;
-		}
-		html{
-			overflow: hidden;
-		}
-		#songsListWrap{
-			position: absolute;
-			left: 0;
-			top: 50%;
-			width: 300px;
-			height: 100%;
-			z-index: 10;
-			background: black;
-		}
-		#songsListWrap a{
-			display: block;
-			cursor: pointer;
-			height: 30px;
-			line-height: 30;
-			text-align: center;
-			color: white;
-			background: #000000;
-		}
-	</style>
-	<script src="./fun.js" type="text/javascript">
-		
-	</script>
-</head>
-<body>
-	<canvas id="canvas">
-		您的浏览器不支持canvas
-	</canvas>
-	<div id="songsListWrap">
-	</div>	
+	<head>
+		<meta charset="UTF-8">
+		<title>music-visualization</title>
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+			}
 
-	<script type="text/javascript">
-		alert("这是一个简单的canvas音乐可视化效果Demo，，加载可能比较慢，audio具体api参考MDN");
-		let songsListWrap = document.getElementById("songsListWrap");
-		let songsList = [
-							"./music/black.mp3",
-							"./music/Ibuki.mp3",
-							"./music/Mad-Machine.mp3",
-							"./music/菅野祐悟 - ブラフをかけろ.mp3"
-						];
-		//http://music.163.com/song/media/outer/url?id=30482386.mp3
-		
-		//获取画布
-		let canvas = document.getElementById("canvas");
-		let canvasCtx = canvas.getContext("2d");
-		
-		let screenWidth = document.documentElement.clientWidth;
-		let screenHeight = document.documentElement.clientHeight;
-		
-		//控制歌曲列表位置
-		songsListWrap.style.marginTop = "-"+screenHeight/2+"px";
-			
-		/*画布*/
-		// 定义画布宽高,全屏
-		canvas.width = screenWidth;
-		canvas.height = screenHeight;
-		//可视化效果线宽
-		canvasCtx.lineWidth=0.8;
-		
-		
-		init()
-		
-		
-		function init(){
-			//创建歌曲列表
-			createSongList()
-			//默认开始播放第一首
-			window.dataArray = getDataArray(0);
-			console.log(dataArray)
-			//播放
-			play();
-			//调用效果动画
-			loop(dataArray);
-		}
-		function createSongList(){
-			let ele = null;
-			for(let i = 0;i<songsList.length;i++){
-				console.log(i);
-				ele = createEle("a",songsList[i].substring(8),{href:"javascript:void(0)"});
-				//绑定事件
-				ele.onclick =function(e){
-					//频谱数据
-					//getDataArray函数的结果中夹带了分析器,其实应该写成类
-					window.dataArray = getDataArray(i);
-					console.log(dataArray)
-					//播放
-					play();
-					//调用效果动画
-					loop(dataArray);
-					
-				}
-				//插入元素
-				songsListWrap.appendChild(ele)
+			html {
+				overflow: hidden;
 			}
-		}
-		function getDataArray(songId){
-			window.audio&&window.audio.pause();
-			let audio=new Audio();
-			window.audio = audio;
-			audio.preload = "auto";
-			audio.src = songsList[songId];
-			//创建上下文
-			let audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-			//创建分析器
-			let analyser=audioCtx.createAnalyser();
-			//从audio元素创建音频数据
-			let source=audioCtx.createMediaElementSource(audio);
-			//将音频数据连接到分析器
-			source.connect(analyser);
-			//连接到播放设备
-			analyser.connect(audioCtx.destination);
-			//???????
-			analyser.fftSize=4096;
-			//频谱数据平滑度
-			analyser.smoothingTimeConstant=0.9;
-			//创建保存数据的数组
-			let dataArray = new Uint8Array(analyser.fftSize);
-			return {
-				analyser:analyser,
-				dataArray:dataArray
-			};
-		}
-		//播放
-		function play() {
-			//播放
-			audio.play()
-		}
-		
-		//停止播放
-		function stop(){
-			
-		}
-		//暂停
-		function pause(){
-			
-		}
-		//获取频谱数据
-		function getData(options){
-			let analyser = options.analyser;
-			let data = options.dataArray;
-			//获取频谱分析数据
-			analyser.getByteFrequencyData(data);
-			//返回数据
-			return data;
-		}
-		//在画布上绘制星形的函数
-		function star(ctx,x,y,r,count,data) {
-			let cas = ctx;
-			cas.save();
-			cas.translate(x,y);
-			cas.beginPath();
-			cas.moveTo(0,r+data[0]);
-			for (var i = 0; i <count; i++) {
-				cas.lineTo(Math.sin((360/count)*i*(Math.PI / 180))*(r+data[i]),Math.cos((360/count)*i*(Math.PI / 180))*(r+data[i]));
-				cas.lineTo(Math.sin((360/count)*(i+0.5)*(Math.PI / 180))*r,Math.cos((360/count)*(i+0.5)*(Math.PI / 180))*r);
+			canvas{
+				position: absolute;
+				left: 0;
+				top: 0;
 			}
-			cas.closePath();
-			cas.restore();
-		}
-		//动画函数
-		function loop(){
-			let data = getData(dataArray);
-			//随机颜色,闪瞎狗眼警告
-			// canvasCtx.strokeStyle = randomColor();
-			canvasCtx.clearRect(0,0,canvas.width,canvas.height);
-			star(canvasCtx,canvas.width/2,canvas.height/2,100,512,data);
-			canvasCtx.stroke();
-			let animation = requestAnimationFrame(loop);
-		}
-// 		source.connect(gainNode);
-// 		gainNode.connect(audioCtx.destination);
-	</script>
-</body>
+			#songsListWrap {
+				position: absolute;
+				left: 0;
+				top: 50%;
+				width: 300px;
+				height: 100%;
+				z-index: 10;
+				background: black;
+			}
+
+			#songsListWrap a {
+				display: block;
+				cursor: pointer;
+				height: 30px;
+				line-height: 30;
+				text-align: center;
+				color: white;
+				background: #000000;
+			}
+		</style>
+		<script src="./fun.js" type="text/javascript">
+
+		</script>
+	</head>
+	<body>
+		<canvas id="canvas">
+			您的浏览器不支持canvas
+		</canvas>
+		<div id="songsListWrap">
+		</div>
+		<script src="lib.js" type="text/javascript">
+			
+		</script>
+		<script type="text/javascript">
+			
+			let app = new MusicVisualization();
+		</script>
+	</body>
 </html>

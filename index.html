@@ -11,6 +11,7 @@
 
 			html {
 				overflow: hidden;
+                color:white;
 			}
 			canvas{
 				position: absolute;
@@ -43,16 +44,19 @@
 	</head>
 	<body>
 		<div id="songsListWrap">
+           <span>播放进度:</span><progress value="0" max="100" id="playProgress"></progress><br>
+            <span>加载进度:</span><progress value="0" max="100" id="loadProgress"></progress>
 		</div>
-		<script src="lib.js" type="text/javascript">
+		<script src="./lib.js" type="text/javascript">
 			
 		</script>
 		<script type="text/javascript">
-			
 			let app = new MusicVisualization({
 				songsListWrap:"songsListWrap",
+                playProgress:"playProgress",
+                loadProgress:"loadProgress",
 				canvas:{
-					color:"#ff0000"
+                    lineWidth:2,
 				},
 				visual:{
 					count:512,

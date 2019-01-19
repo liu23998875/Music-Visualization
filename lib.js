@@ -1,4 +1,3 @@
-
 (function (global, factory) {
     "document" in global ? global.MusicVisualization = factory() : console.log("致命错误");
 })(this, function () {
@@ -30,6 +29,9 @@
 			this.canvasCtx = null;
 			this.animate = null;
 			this.options = options;
+      this.playProgress = null;
+      this.loadProgress = null;
+      this.playProgressTimer = null;
 			this.songsList = [
 				"./music/black.mp3",
 				"./music/Ibuki.mp3",
@@ -42,13 +44,13 @@
 	
 		init() {
 			//新的动画接口不熟悉......
-			window.app = this;
+			window.mvapp = this;
 			//创建画布
 			this.createCanvasCtx();
 			//创建歌曲列表
 			this.createSongsList();
-			//播放
-			this.play(0);
+      this.getLoadProgress();
+      this.getPlayProgress();
 		}
 		//创建音频元素和语境
 		createAudioCtx(songId) {
@@ -59,6 +61,36 @@
 			this.audio = audio;
 			//创建语境
 			this.audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+      //绑定事件
+      //开始加载
+      eventListener(audio,"loadstart",function(){
+        console.log("开始加载");
+      });
+      //
+      eventListener(audio,"canplay",()=>{
+        console.log("音频就绪");
+        //在音频加载过程之中不断触发
+        eventListener(audio,"progress",()=>{
+          this.loadedProgress();
+        });
+      });
+      
+      //加载结束
+      eventListener(audio,"loadend",function(){
+        console.log("加载完毕");
+      });
+      //开始播放 无论是初次，暂停还是重新开始
+      eventListener(audio,"playing",()=>{
+        console.log("开始播放");
+        //调用播放进度定时器
+        //避免生成多个定时器
+        window.clearInterval(this.playProgressTimer);
+        console.log(this.playProgressTimer);
+        this.playProgressTimer = window.setInterval(()=>{
+          this.playedProgress();
+        },1000);
+      });
+      
 		}
 		createAnalyser() {
 			//创建分析器
@@ -82,8 +114,8 @@
 			canvas.height = this.options.canvas.height||document.documentElement.clientHeight;
 			this.canvasCtx = canvas.getContext("2d");
 			//设置画布
-			this.canvasCtx.lineWidth = this.options.canvas.linewidth||1;
-			this.canvasCtx.strokeStyle = this.options.canvas.color;
+			this.canvasCtx.lineWidth = this.options.canvas.lineWidth;
+			this.canvasCtx.strokeStyle = this.options.canvas.color||"black";
 			//在页面中插入元素
 			document.body.appendChild(canvas);
 		}
@@ -105,10 +137,26 @@
 				songsListWrap.appendChild(songItem)
 			}
 		}
+    //获取播放进度元素
+    getPlayProgress(){
+      this.playProgress = this.options.playProgress&&document.getElementById(this.options.playProgress);
+    }
+    //获取加载进度元素
+    getLoadProgress(){
+      this.loadProgress = this.options.loadProgress&&document.getElementById(this.options.loadProgress);
+
+    }
 		//创建存放分析数据的数组
-		createDataArray(length) {
+		createDataArray() {
 			//创建保存数据的数组
 			this.dataArray = new Uint8Array(this.analyser.fftSize);
+		}
+    //获取频谱分析数据
+		getAnalyserData() {
+			//从分析器获取频谱分析数据
+			this.analyser.getByteFrequencyData(this.dataArray);
+			//返回数据
+			return this.dataArray;
 		}
 		//播放
 		play(songId) {
@@ -120,27 +168,19 @@
 			this.createDataArray();
 			//播放
 			this.audio.play();
+      
 			//调用效果动画
 			this.loop();
 		}
 		//暂停
 		pause(){
-			
-			
+				
 		}
 		// 继续播放
 		continuation(){
-			
-			
-			
+      
 		}
-		//获取频谱分析数据
-		getAnalyserData() {
-			//从分析器获取频谱分析数据
-			this.analyser.getByteFrequencyData(this.dataArray);
-			//返回数据
-			return this.dataArray;
-		}
+
 		//效果绘制
 		star(ctx, x, y, r, count, data) {
 			let cas = ctx;
@@ -157,19 +197,35 @@
 			cas.closePath();
 			cas.restore();
 		}
-		animate(){
-			
+    //加载进度
+    loadedProgress(){
+      //开始加载
+      let allTime = this.audio.duration;
+      let loadedTime = this.audio.buffered.end(0);
+      let percent = loadedTime/allTime*100;
+      this.loadProgress.value = percent;
+    }
+    //播放进度
+    playedProgress(){
+      let allTime = this.audio.duration;
+      let playedTime = this.audio.currentTime;
+      let percent = playedTime/allTime*100;
+      this.playProgress.value = percent;
+    }
+		frame(){
+			let data = this.getAnalyserData();
+			let count = this.options.visual.count||this.analyser.fftSize/2;
+			// canvasCtx.strokeStyle = randomColor();
+			this.canvasCtx.clearRect(0, 0, this.canvasCtx.canvas.width, this.canvasCtx.canvas.height);
+			this.star(this.canvasCtx, this.canvasCtx.canvas.width / 2, this.canvasCtx.canvas.height / 2,
+				100, count, data);
+			this.canvasCtx.stroke();
 		}
+    
 		loop() {
 			//获取数据
-			let _this = window.app
-			let data = _this.getAnalyserData();
-			let count = _this.options.visual.count||_this.analyser.fftSize/2;
-			// canvasCtx.strokeStyle = randomColor();
-			_this.canvasCtx.clearRect(0, 0, _this.canvasCtx.canvas.width, _this.canvasCtx.canvas.height);
-			_this.star(_this.canvasCtx, _this.canvasCtx.canvas.width / 2, _this.canvasCtx.canvas.height / 2,
-				100, count, data);
-			_this.canvasCtx.stroke();
+			let _this = window.mvapp
+			_this.frame();
 			_this.animate = requestAnimationFrame(_this.loop);
 		}
 	}

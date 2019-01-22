@@ -37,6 +37,7 @@
 				"./music/Ibuki.mp3",
 				"./music/Mad-Machine.mp3",
 				"./music/Tiger-Blood.mp3",
+				"./music/Grayed-Out.mp3",
 				"./music/菅野祐悟 - ブラフをかけろ.mp3"
 			]
 			this.init();
